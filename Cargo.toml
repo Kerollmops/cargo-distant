@@ -1,6 +1,11 @@
 [package]
 name = "cargo-distant"
 version = "0.1.0"
+description = "only for name locking"
+license = "MIT"
+documentation = "https://docs.rs/cargo-distant"
+homepage = "https://github.com/Kerollmops/cargo-distant"
+repository = "https://github.com/Kerollmops/cargo-distant"
 authors = ["Kerollmops <renault.cle@gmail.com>"]
 
 [dependencies]
