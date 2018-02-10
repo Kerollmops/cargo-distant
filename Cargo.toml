@@ -9,3 +9,4 @@ repository = "https://github.com/Kerollmops/cargo-distant"
 authors = ["Kerollmops <renault.cle@gmail.com>"]
 
 [dependencies]
+structopt = { git = "https://github.com/Kerollmops/structopt.git", rev = "7f05ee9" }
