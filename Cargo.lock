@@ -22,7 +22,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "cargo-distant"
 version = "0.1.0"
 dependencies = [
- "structopt 0.2.0 (git+https://github.com/Kerollmops/structopt.git?rev=7f05ee9)",
+ "structopt 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "welder 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -81,16 +82,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "structopt"
 version = "0.2.0"
-source = "git+https://github.com/Kerollmops/structopt.git?rev=7f05ee9#7f05ee9a00d708eef2abf2226abcbda68dc96499"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "clap 2.29.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "structopt-derive 0.2.0 (git+https://github.com/Kerollmops/structopt.git?rev=7f05ee9)",
+ "structopt-derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "structopt-derive"
 version = "0.2.0"
-source = "git+https://github.com/Kerollmops/structopt.git?rev=7f05ee9#7f05ee9a00d708eef2abf2226abcbda68dc96499"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -141,6 +142,11 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "welder"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "winapi"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -170,14 +176,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum redox_syscall 0.1.37 (registry+https://github.com/rust-lang/crates.io-index)" = "0d92eecebad22b767915e4d529f89f28ee96dbbf5a4810d2b844373f136417fd"
 "checksum redox_termios 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7e891cfe48e9100a70a3b6eb652fef28920c117d366339687bd5576160db0f76"
 "checksum strsim 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bb4f380125926a99e52bc279241539c018323fab05ad6368b56f93d9369ff550"
-"checksum structopt 0.2.0 (git+https://github.com/Kerollmops/structopt.git?rev=7f05ee9)" = "<none>"
-"checksum structopt-derive 0.2.0 (git+https://github.com/Kerollmops/structopt.git?rev=7f05ee9)" = "<none>"
+"checksum structopt 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "2699842677988c7a0de0e86c6abf4b8cfb2c07d2ac15cca073c346b085bcee46"
+"checksum structopt-derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5d01e1dbaf1440040b0144936e8770948b031eacd8b03ad9a5724b98183b53b5"
 "checksum syn 0.12.12 (registry+https://github.com/rust-lang/crates.io-index)" = "9e1c669ed757c0ebd04337f6a5bb972d05e0c08fe2540dd3ee3dd9e4daf1604c"
 "checksum termion 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "689a3bdfaab439fd92bc87df5c4c78417d3cbe537487274e9b0b2dce76e92096"
 "checksum textwrap 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c0b59b6b4b44d867f1370ef1bd91bfb262bf07bf0ae65c202ea2fbc16153b693"
 "checksum unicode-width 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "bf3a113775714a22dcb774d8ea3655c53a32debae63a063acc00a91cc586245f"
 "checksum unicode-xid 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "fc72304796d0818e357ead4e000d19c9c174ab23dc11093ac919054d20a6a7fc"
 "checksum vec_map 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "887b5b631c2ad01628bbbaa7dd4c869f80d3186688f8d0b6f58774fbe324988c"
+"checksum welder 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1dc1c29a95887576fb248959feb42aa234f341d77401efb3678df516f142f409"
 "checksum winapi 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "04e3bd221fcbe8a271359c04f21a76db7d0c6028862d1bb5512d85e1e2eb5bb3"
 "checksum winapi-i686-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
 "checksum winapi-x86_64-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"

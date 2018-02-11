@@ -1,11 +1,13 @@
 #[macro_use] extern crate structopt;
+extern crate welder;
 
 use std::{env, process};
+use std::io::Write;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use std::path::Path;
-use std::ffi::OsStr;
 use structopt::StructOpt;
+use welder::Welder;
 
 // Don't forget to update the Command enum
 const SUBCOMMANDS: &[&str] = &["build", "check", "doc", "run", "test", "bench"];
@@ -58,79 +60,99 @@ struct Opts {
 }
 
 impl Opts {
-    fn execute<P, I, S>(&self, path: P, args: I) -> Result<(), ()>
+    fn execute<P, I>(&self, path: P, args: I) -> Result<(), ()>
     where
-        I: IntoIterator<Item = S>,
-        S: AsRef<OsStr>,
+        I: IntoIterator<Item = String>, // TODO String ?
         P: AsRef<Path>,
     {
-        let ssh_cmd = match env::var_os("DISTANT_SSH_COMMAND") {
-            Some(var) => var,
-            None => {
-                let hostname = match self.hostname.as_ref() {
-                    Some(name) => name,
-                    None => unimplemented!("search in toml file"),
-                };
-                format!("ssh {}", hostname).into()
-            },
+        let ssh_cmd = ssh_command(&self.hostname);
+
+        let rustup_run = match env::var("DISTANT_CARGO_COMMAND") {
+            Ok(var) => var,
+            Err(err) => format!("$HOME/.cargo/bin/rustup run {} cargo", self.toolchain).into(),
         };
 
-        let cargo_cmd = match env::var_os("DISTANT_CARGO_COMMAND") {
-            Some(var) => var,
-            None => format!("$HOME/.cargo/run/rustup run {}", self.toolchain).into(),
-        };
+        let project_path = project_path(path);
 
-        let project_path = {
-            let mut hasher = DefaultHasher::default();
+        let mut sh = process::Command::new("sh");
+        let ssh_command = sh.arg("-c").arg(ssh_cmd).stdin(process::Stdio::piped());
 
-            let path = path.as_ref();
-
-            // TODO make and explain that the remote-path is
-            //      hash($hostname + $USER + $local-path)
-            path.hash(&mut hasher);
-
-            let post_name = path.file_name()
-                              .map(|x| x.to_string_lossy())
-                              .unwrap_or("xxx".into());
-
-            format!("$HOME/.distant/{}-{:#x}", post_name, hasher.finish())
-        };
-
-        let mut sh_c = process::Command::new("sh");
-        let base = sh_c.arg("-c")
-                       .arg(ssh_cmd).arg("--") // from here, arg(s) are useless
-                       .args(&["set", "-e"])
-                       .args(&["cd", &project_path, ";"])
-                       .arg(cargo_cmd)
-                       .stdin(process::Stdio::null());
+        let command = Welder::new(' ')
+                            .elems(vec!["set", "-e", "&&"])
+                            // .elems(vec!["mkdir", "-p", &project_path, "&&"])
+                            .elems(vec!["cd", &project_path, "&&"])
+                            .elem(rustup_run);
 
         match self.command {
             Command::Build => {
-                let status = base.arg("build")
-                                .args(args)
-                                .status();
+                let command = command.elem("build").elems(args);
 
-                println!("{:?}", status);
+                match ssh_command.spawn() {
+                    Ok(mut child) => {
+                        {
+                            let mut stdin = child.stdin.as_mut().expect("Failed to open stdin"); // FIXME wrong !
+                            let command: String = command.weld();
+                            stdin.write_all(command.as_bytes()).expect("Failed to write to stdin"); // FIXME wrong !
+                        }
+
+                        eprintln!("Trying to contact the remote machine...");
+                        let status = child.wait();
+                        println!("{:?}", status);
+                    },
+                    Err(err) => panic!("{:?}", err),
+                }
             },
             Command::Check => {
-                //
+                // command + "check"
+                unimplemented!()
             },
             Command::Doc => {
-                //
+                unimplemented!()
             },
             Command::Run => {
-                //
+                unimplemented!()
             },
             Command::Test => {
-                //
+                unimplemented!()
             },
             Command::Bench => {
-                //
+                unimplemented!()
             },
-        }
+        };
 
         Ok(())
     }
+}
+
+fn ssh_command(hostname: &Option<String>) -> String {
+    // TODO does the env variable is the priority ? or the argument ?
+    match *hostname {
+        Some(ref host) => format!("ssh {}", host),
+        None => {
+            // TODO search in distant.toml config files
+
+            match env::var("DISTANT_SSH_COMMAND") {
+                Ok(var) => var,
+                Err(err) => panic!("Whoops no hostname found"),
+            }
+        }
+    }
+}
+
+fn project_path<P: AsRef<Path>>(path: P) -> String {
+    let mut hasher = DefaultHasher::default();
+
+    let path = path.as_ref();
+
+    // TODO make and explain that the remote-path is
+    //      hash($hostname + $USER + $local-path)
+    path.hash(&mut hasher);
+
+    let prefix_name = path.file_name()
+                          .map(|x| x.to_string_lossy())
+                          .unwrap_or("xxx".into());
+
+    format!("$HOME/.distant/{}-{:x}", prefix_name, hasher.finish())
 }
 
 fn main() {
@@ -140,9 +162,8 @@ fn main() {
         let build_args = args.split_off(build_pos + 1);
         let before_build = args;
 
-        let matches = Opts::from_any(&before_build[1..]);
+        let matches = Opts::from_iter(&before_build[1..]);
 
-        // TODO why do we need the local path "." ?
         let pwd = env::current_dir().unwrap(); // FIXME
         matches.execute(pwd, build_args);
 
