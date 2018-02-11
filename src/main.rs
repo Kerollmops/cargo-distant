@@ -2,7 +2,7 @@
 extern crate welder;
 
 use std::{env, process};
-use std::io::Write;
+use std::io::{self, Write};
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use std::path::Path;
@@ -60,7 +60,7 @@ struct Opts {
 }
 
 impl Opts {
-    fn execute<P, I>(&self, path: P, args: I) -> Result<(), ()>
+    fn execute<P, I>(&self, path: P, args: I) -> io::Result<()>
     where
         I: IntoIterator<Item = String>, // TODO String ?
         P: AsRef<Path>,
@@ -79,46 +79,70 @@ impl Opts {
 
         let command = Welder::new(' ')
                             .elems(vec!["set", "-e", "&&"])
-                            // .elems(vec!["mkdir", "-p", &project_path, "&&"])
                             .elems(vec!["cd", &project_path, "&&"])
                             .elem(rustup_run);
 
         match self.command {
             Command::Build => {
-                let command = command.elem("build").elems(args);
+                // upload project
 
-                match ssh_command.spawn() {
-                    Ok(mut child) => {
-                        {
-                            let mut stdin = child.stdin.as_mut().expect("Failed to open stdin"); // FIXME wrong !
-                            let command: String = command.weld();
-                            stdin.write_all(command.as_bytes()).expect("Failed to write to stdin"); // FIXME wrong !
-                        }
+                let command: String = command.elem("build").elems(args).weld();
+                execute_command_through_ssh(ssh_command, command.as_bytes())?;
 
-                        eprintln!("Trying to contact the remote machine...");
-                        let status = child.wait();
-                        println!("{:?}", status);
-                    },
-                    Err(err) => panic!("{:?}", err),
-                }
+                // retrieve project
             },
             Command::Check => {
-                // command + "check"
-                unimplemented!()
+                // upload project
+
+                let command: String = command.elem("check").elems(args).weld();
+                execute_command_through_ssh(ssh_command, command.as_bytes())?;
+
+                // retrieve project
             },
             Command::Doc => {
-                unimplemented!()
+                // upload project
+
+                let command: String = command.elem("doc").elems(args).weld();
+                execute_command_through_ssh(ssh_command, command.as_bytes())?;
+
+                // retrieve project
             },
             Command::Run => {
-                unimplemented!()
+                // TODO do we want to run on the remote or on the local machine ?
+
+                // upload project
+
+                let command: String = command.elem("build").elems(args).weld();
+                execute_command_through_ssh(ssh_command, command.as_bytes())?;
+
+                // retrieve project
+                // a simple cargo run
             },
             Command::Test => {
-                unimplemented!()
+                // TODO idem for test
+                // upload project
+
+                let command: String = command.elems(vec!["build", "--tests"]).elems(args).weld();
+                execute_command_through_ssh(ssh_command, command.as_bytes())?;
+
+                // retrieve project
+                // a simple cargo test
             },
             Command::Bench => {
-                unimplemented!()
+                // upload project
+
+                // TODO idem for test
+                // upload project
+
+                let command: String = command.elems(vec!["build", "--benches"]).elems(args).weld();
+                execute_command_through_ssh(ssh_command, command.as_bytes())?;
+
+                // retrieve project
+                // a simple cargo bench
+
+                // retrieve project
             },
-        };
+        }
 
         Ok(())
     }
@@ -153,6 +177,15 @@ fn project_path<P: AsRef<Path>>(path: P) -> String {
                           .unwrap_or("xxx".into());
 
     format!("$HOME/.distant/{}-{:x}", prefix_name, hasher.finish())
+}
+
+fn execute_command_through_ssh(ssh: &mut process::Command, command: &[u8]) -> io::Result<process::ExitStatus> {
+    let mut child = ssh.spawn()?;
+    {
+        let stdin = child.stdin.as_mut().unwrap(); // FIXME
+        stdin.write_all(command)?;
+    }
+    child.wait()
 }
 
 fn main() {
